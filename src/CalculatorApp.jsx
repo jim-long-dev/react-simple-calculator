@@ -101,7 +101,7 @@ function reducer(state, { type, payload }) {
       if (state.currentOperand === '0' && state.previousOperand == null) {
         return state
       }
-      if (state.currentOperand && state.previousOperand == null) {
+      if (state.currentOperand) {
         // the '+' converts a string of numbers into a number itself
         let percentageOperand = +state.currentOperand / 100
         return {
