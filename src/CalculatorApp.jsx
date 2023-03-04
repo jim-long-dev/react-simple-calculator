@@ -11,6 +11,8 @@ import './styles.css'
 export const ACTIONS = {
   ADD_DIGIT: 'add-digit',
   CHOOSE_OPERATION: 'choose-operation',
+  TOGGLE_NEGATIVE: 'toggle-negative',
+  PERCENTAGE: 'percentage',
   CLEAR: 'clear',
   DELETE_DIGIT: 'delete-digit',
   EVALUATE: 'evaluate',
@@ -36,7 +38,7 @@ function reducer(state, { type, payload }) {
         return state
       }
       // if user enters a period (.) first, immediately convert it to a zero-point decimal number
-      // IMPORTANT: this code prevents the app from crashing
+      // IMPORTANT: this prevents the app from crashing
       if (payload.digit === '.' && state.currentOperand == null) {
         return { ...state, currentOperand: '0.' }
       }
@@ -78,6 +80,50 @@ function reducer(state, { type, payload }) {
         previousOperand: evaluate(state),
         operation: payload.operation,
         currentOperand: null,
+      }
+
+    case ACTIONS.TOGGLE_NEGATIVE:
+      if (state.currentOperand == null) {
+        return { ...state, currentOperand: '-' }
+      }
+      if (state.currentOperand.includes('-')) {
+        return {
+          ...state,
+          currentOperand: state.currentOperand.replace('-', ''),
+        }
+      }
+      return {
+        ...state,
+        currentOperand: '-' + state.currentOperand,
+      }
+
+    case ACTIONS.PERCENTAGE:
+      if (state.currentOperand === '0' && state.previousOperand == null) {
+        return state
+      }
+      if (state.currentOperand && state.previousOperand == null) {
+        // the '+' converts a string of numbers into a number itself
+        let percentageOperand = +state.currentOperand / 100
+        return {
+          ...state,
+          // silly workaround to resolve decimal number bugs in JS
+          // https://stackoverflow.com/a/10474055/14225703
+          currentOperand: (
+            Math.round(percentageOperand * 1e12) / 1e12
+          ).toString(),
+        }
+      }
+      if (state.previousOperand) {
+        let percentageOperand = +(
+          (state.previousOperand * state.currentOperand) /
+          100
+        )
+        return {
+          ...state,
+          currentOperand: (
+            Math.round(percentageOperand * 1e12) / 1e12
+          ).toString(),
+        }
       }
 
     case ACTIONS.CLEAR:
@@ -137,21 +183,25 @@ function evaluate({ currentOperand, previousOperand, operation }) {
   const prev = parseFloat(previousOperand)
   const current = parseFloat(currentOperand)
   if (isNaN(prev) || isNaN(current)) return ''
-  let computation = ''
+  let result = ''
   switch (operation) {
     case '+':
-      computation = prev + current
+      result = prev + current
       break
     case '-':
-      computation = prev - current
+      result = prev - current
       break
     case '×':
-      computation = prev * current
+      result = prev * current
       break
     case '÷':
-      computation = prev / current
+      result = prev / current
       break
+    case '%':
   }
+  // silly workaround to resolve decimal number bugs in JS
+  // https://stackoverflow.com/a/10474055/14225703
+  let computation = Math.round(+result * 1e12) / 1e12
   return computation.toString()
 }
 
@@ -188,14 +238,12 @@ export default function CalculatorApp() {
           </div>
           <div className="current-operand">{formatOperand(currentOperand)}</div>
         </div>
-        <button
-          className="span-two"
-          onClick={() => dispatch({ type: ACTIONS.CLEAR })}
-        >
-          AC
-        </button>
+        <button onClick={() => dispatch({ type: ACTIONS.CLEAR })}>AC</button>
         <button onClick={() => dispatch({ type: ACTIONS.DELETE_DIGIT })}>
           DEL
+        </button>
+        <button onClick={() => dispatch({ type: ACTIONS.PERCENTAGE })}>
+          %
         </button>
         <OperationButton operation="÷" dispatch={dispatch} />
         <DigitButton digit="1" dispatch={dispatch} />
@@ -210,14 +258,12 @@ export default function CalculatorApp() {
         <DigitButton digit="8" dispatch={dispatch} />
         <DigitButton digit="9" dispatch={dispatch} />
         <OperationButton operation="-" dispatch={dispatch} />
+        <button onClick={() => dispatch({ type: ACTIONS.TOGGLE_NEGATIVE })}>
+          +/-
+        </button>
         <DigitButton digit="." dispatch={dispatch} />
         <DigitButton digit="0" dispatch={dispatch} />
-        <button
-          className="span-two"
-          onClick={() => dispatch({ type: ACTIONS.EVALUATE })}
-        >
-          =
-        </button>
+        <button onClick={() => dispatch({ type: ACTIONS.EVALUATE })}>=</button>
       </main>
     </>
   )
