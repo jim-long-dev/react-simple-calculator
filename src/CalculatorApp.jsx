@@ -83,15 +83,18 @@ function reducer(state, { type, payload }) {
       }
 
     case ACTIONS.TOGGLE_NEGATIVE:
+      // allow user to add a negative sign after a fresh calculation
       if (state.currentOperand == null) {
         return { ...state, currentOperand: '-' }
       }
+      // removes the '-' if it already exists (ie. toggles it)
       if (state.currentOperand.includes('-')) {
         return {
           ...state,
           currentOperand: state.currentOperand.replace('-', ''),
         }
       }
+      // concatenates '-' with the operand
       return {
         ...state,
         currentOperand: '-' + state.currentOperand,
@@ -113,18 +116,6 @@ function reducer(state, { type, payload }) {
           ).toString(),
         }
       }
-      // if (state.previousOperand) {
-      //   let percentageOperand = +(
-      //     (state.previousOperand * state.currentOperand) /
-      //     100
-      //   )
-      //   return {
-      //     ...state,
-      //     currentOperand: (
-      //       Math.round(percentageOperand * 1e12) / 1e12
-      //     ).toString(),
-      //   }
-      // }
 
     case ACTIONS.CLEAR:
       // clears everything
@@ -182,7 +173,9 @@ function reducer(state, { type, payload }) {
 function evaluate({ currentOperand, previousOperand, operation }) {
   const prev = parseFloat(previousOperand)
   const current = parseFloat(currentOperand)
-  if (isNaN(prev) || isNaN(current)) return ''
+  if (isNaN(prev) || isNaN(current)) {
+    return ''
+  }
   let result = ''
   switch (operation) {
     case '+':
@@ -211,9 +204,7 @@ const INTEGER_FORMATTER = new Intl.NumberFormat('en-us', {
   maximumFractionDigits: 0,
 })
 function formatOperand(operand) {
-  if (operand == null) {
-    return
-  }
+  if (operand == null) return
   const [integer, decimal] = operand.split('.')
   if (decimal == null) {
     return INTEGER_FORMATTER.format(integer)
@@ -231,7 +222,7 @@ export default function CalculatorApp() {
   return (
     <>
       <h1>Calculator</h1>
-      <main className="calculator-grid">
+      <div className="calculator-grid">
         <div className="output">
           <div className="previous-operand">
             {formatOperand(previousOperand)} {operation}
@@ -264,7 +255,7 @@ export default function CalculatorApp() {
         <DigitButton digit="." dispatch={dispatch} />
         <DigitButton digit="0" dispatch={dispatch} />
         <button onClick={() => dispatch({ type: ACTIONS.EVALUATE })}>=</button>
-      </main>
+      </div>
     </>
   )
 }
