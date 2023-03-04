@@ -113,18 +113,18 @@ function reducer(state, { type, payload }) {
           ).toString(),
         }
       }
-      if (state.previousOperand) {
-        let percentageOperand = +(
-          (state.previousOperand * state.currentOperand) /
-          100
-        )
-        return {
-          ...state,
-          currentOperand: (
-            Math.round(percentageOperand * 1e12) / 1e12
-          ).toString(),
-        }
-      }
+      // if (state.previousOperand) {
+      //   let percentageOperand = +(
+      //     (state.previousOperand * state.currentOperand) /
+      //     100
+      //   )
+      //   return {
+      //     ...state,
+      //     currentOperand: (
+      //       Math.round(percentageOperand * 1e12) / 1e12
+      //     ).toString(),
+      //   }
+      // }
 
     case ACTIONS.CLEAR:
       // clears everything
