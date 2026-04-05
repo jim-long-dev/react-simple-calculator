@@ -1,6 +1,6 @@
 # 🧮 React Calculator (Containerized)
 
-A functional React calculator built with Vite, optimized for deployment using Docker and Nginx.
+A simple calculator built with React and Vite, optimized for deployment using Docker and Nginx.
 
 ## 🌟 Why I Built This
 I started this project following a YouTube tutorial by WebDevSimplified, but I felt the original implementation was incomplete. I modified the logic and added several features of my own to make it more like what an actual physical calculator does.
