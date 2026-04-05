@@ -1,0 +1,6 @@
+services:
+  calculator-app:
+    build: .
+    ports:
+      - "8080:80"  # Map your computer's port 8080 to Nginx's port 80
+    restart: always

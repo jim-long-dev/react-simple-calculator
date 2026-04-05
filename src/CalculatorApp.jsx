@@ -83,7 +83,7 @@ function reducer(state, { type, payload }) {
       }
 
     case ACTIONS.TOGGLE_NEGATIVE:
-      // allow user to add a negative sign after a fresh calculation
+      // allow user to add an initial negative sign
       if (state.currentOperand == null) {
         return { ...state, currentOperand: '-' }
       }
@@ -97,20 +97,47 @@ function reducer(state, { type, payload }) {
       // concatenates '-' with the operand
       return {
         ...state,
-        currentOperand: '-' + state.currentOperand,
+        currentOperand: `-${state.currentOperand}`,
       }
 
     case ACTIONS.PERCENTAGE:
+      // pressing '%' initially will do nothing
       if (state.currentOperand === '0' && state.previousOperand == null) {
         return state
       }
-      if (state.currentOperand) {
+      // if:
+      // 1. there is a current operand but not a previous operand, OR
+      // 2. there are both a current and previous operands, and the chosen operation is either '×' (multiply) or '÷' (divide),
+      // the percentage button divides the current operand by 100
+      if (
+        (state.currentOperand && state.previousOperand == null) ||
+        (state.currentOperand &&
+          state.previousOperand &&
+          (state.operation === '×' || state.operation === '÷'))
+      ) {
         // the '+' converts a string of numbers into a number itself
         let percentageOperand = +state.currentOperand / 100
         return {
           ...state,
           // silly workaround to resolve decimal number bugs in JS
           // https://stackoverflow.com/a/10474055/14225703
+          currentOperand: (
+            Math.round(percentageOperand * 1e12) / 1e12
+          ).toString(),
+        }
+      }
+      // if there are both a current and previous operands, and the chosen operation is either '+' (add) or '-' (subtract),
+      // the percentage operator takes the current operand, divides it by 100, then multiplies it with the previous operand
+      // this behavior closely mimics that of the classical calculator
+      if (
+        state.currentOperand &&
+        state.previousOperand &&
+        (state.operation === '+' || state.operation === '-')
+      ) {
+        let percentageOperand =
+          (+state.currentOperand / 100) * state.previousOperand
+        return {
+          ...state,
           currentOperand: (
             Math.round(percentageOperand * 1e12) / 1e12
           ).toString(),
@@ -143,7 +170,7 @@ function reducer(state, { type, payload }) {
       if (state.currentOperand.length === 1) {
         return { ...state, currentOperand: null }
       }
-      // when all conditions above have been satisfied, delete the last digit or operator from the current operand.
+      // otherwise, delete the last digit or operator from the current operand.
       return {
         ...state,
         currentOperand: state.currentOperand.slice(0, -1),
@@ -158,7 +185,7 @@ function reducer(state, { type, payload }) {
       ) {
         return state
       }
-      // perform calculation and returns an overwrite state so that if the user enters a digit again (see above), the result is overwritten
+      // perform calculation and returns an overwrite state so that if the user enters a digit again (see ACTIONS.ADD_DIGIT above), the result is overwritten
       return {
         ...state,
         overwrite: true,
@@ -213,7 +240,8 @@ function formatOperand(operand) {
 }
 
 export default function CalculatorApp() {
-  // the state variable is destructured here
+  // the state variable is destructured here:
+  // const { currentOperand, previousOperand, operation } = state
   const [{ currentOperand, previousOperand, operation }, dispatch] = useReducer(
     reducer,
     { currentOperand: '0' }
@@ -221,7 +249,6 @@ export default function CalculatorApp() {
 
   return (
     <>
-      <h1>Calculator</h1>
       <div className="calculator-grid">
         <div className="output">
           <div className="previous-operand">
@@ -229,7 +256,12 @@ export default function CalculatorApp() {
           </div>
           <div className="current-operand">{formatOperand(currentOperand)}</div>
         </div>
-        <button onClick={() => dispatch({ type: ACTIONS.CLEAR })}>AC</button>
+        <button
+          /* className="span-two" */
+          onClick={() => dispatch({ type: ACTIONS.CLEAR })}
+        >
+          AC
+        </button>
         <button onClick={() => dispatch({ type: ACTIONS.DELETE_DIGIT })}>
           DEL
         </button>
@@ -252,8 +284,8 @@ export default function CalculatorApp() {
         <button onClick={() => dispatch({ type: ACTIONS.TOGGLE_NEGATIVE })}>
           +/-
         </button>
-        <DigitButton digit="." dispatch={dispatch} />
         <DigitButton digit="0" dispatch={dispatch} />
+        <DigitButton digit="." dispatch={dispatch} />
         <button onClick={() => dispatch({ type: ACTIONS.EVALUATE })}>=</button>
       </div>
     </>
